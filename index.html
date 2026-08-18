@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Registrasi - SAMAFITRO X BRADY IPS PARTNER EXCELLENCE SUMMIT 2026</title>
 
+    <!-- Cropper.js CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css"/>
+
     <style>
         * {
             box-sizing: border-box;
@@ -144,7 +147,6 @@
             border-color: #d9232d;
         }
 
-        /* --- TOMBOL KAMERA --- */
         .btn-open-camera {
             width: 100%;
             background-color: #28a745;
@@ -197,7 +199,7 @@
             position: relative;
             display: inline-block;
             max-width: 100%;
-            width: 240px;
+            width: 260px;
             border-radius: 8px;
             overflow: hidden;
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
@@ -210,15 +212,15 @@
             display: block;
         }
 
-        /* --- MODAL POPUP KAMERA RESPONSIVE HP --- */
-        .camera-modal {
+        /* --- MODAL POPUP (KAMERA & EDITOR CROPPER) --- */
+        .modal-overlay {
             display: none;
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
-            background-color: rgba(0,0,0,0.9);
+            background-color: rgba(0,0,0,0.92);
             z-index: 10000;
             flex-direction: column;
             justify-content: center;
@@ -226,65 +228,105 @@
             padding: 10px;
         }
 
-        /* Viewport kamera presisi mengikuti rasio layar HP */
-        .camera-viewport {
+        /* MODAL STEPS */
+        .modal-step {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 360px;
+        }
+
+        .modal-step.active {
+            display: flex;
+        }
+
+        /* VIEWPORT KAMERA & EDITOR */
+        .viewport-box {
             position: relative;
             width: 100%;
-            max-width: 380px;
-            height: 70vh; /* Mengikuti tinggi layar HP */
-            max-height: 520px;
+            height: 450px;
             border-radius: 12px;
             overflow: hidden;
             background-color: #000;
             display: flex;
             align-items: center;
             justify-content: center;
+            border: 2px solid #ffffff33;
         }
 
-        /* Video kamera live */
-        .camera-viewport video {
+        .viewport-box video {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transform: scaleX(-1); /* Mirror camera */
+            transform: scaleX(-1);
         }
 
-        /* Overlay Frame PNG Presisi */
-        .camera-overlay {
+        /* EDITOR CONTAINER */
+        .cropper-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .cropper-wrapper img#cropImage {
+            display: block;
+            max-width: 100%;
+        }
+
+        /* FRAME OVERLAY PADA EDITOR */
+        .editor-frame-overlay {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             pointer-events: none;
-            object-fit: contain; /* Memastikan seluruh frame tampil utuh tanpa terpotong */
+            z-index: 10;
+            object-fit: fill;
         }
 
-        .camera-controls {
+        /* STYLING CUSTOM UNTUK CROPPER JS */
+        .cropper-bg {
+            background-image: none !important;
+            background-color: #000 !important;
+        }
+        .cropper-modal {
+            opacity: 0.3 !important;
+        }
+        .cropper-view-box, .cropper-face, .cropper-dashed, .cropper-point, .cropper-line {
+            display: none !important;
+        }
+
+        .modal-controls {
             margin-top: 15px;
             display: flex;
-            gap: 15px;
+            gap: 12px;
         }
 
-        .btn-capture {
-            background-color: #d9232d;
+        .btn-modal {
             color: white;
             border: none;
-            padding: 12px 28px;
-            font-size: 15px;
+            padding: 12px 20px;
+            font-size: 14px;
             font-weight: bold;
             border-radius: 50px;
             cursor: pointer;
         }
 
-        .btn-close-cam {
-            background-color: #6c757d;
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            font-size: 15px;
-            border-radius: 50px;
-            cursor: pointer;
+        .btn-red { background-color: #d9232d; }
+        .btn-grey { background-color: #6c757d; }
+        .btn-green { background-color: #28a745; }
+
+        .editor-instruction {
+            color: #fff;
+            font-size: 13px;
+            margin-bottom: 8px;
+            text-align: center;
+            background: rgba(255,255,255,0.15);
+            padding: 6px 14px;
+            border-radius: 20px;
         }
     </style>
 </head>
@@ -374,12 +416,12 @@
                 </select>
             </div>
 
-            <!-- Tombol Buka Kamera Live dengan Overlay Frame -->
+            <!-- Tombol Buka Kamera -->
             <div class="form-group">
                 <label>Foto Selfie Ber-Frame <span>*</span></label>
-                <button type="button" id="openCamBtn" class="btn-open-camera">📷 Ambil Foto Selfie (Live Frame)</button>
+                <button type="button" id="openCamBtn" class="btn-open-camera">📷 Ambil Foto Selfie (Adjustable)</button>
                 
-                <!-- Preview Foto Hasil Capture -->
+                <!-- Preview Foto Hasil Crop & Frame -->
                 <div class="preview-container" id="previewContainer">
                     <p style="font-size:12px; color:#555; margin-top:10px; margin-bottom:6px;">Preview Kartu Peserta Anda:</p>
                     <div class="preview-box">
@@ -395,33 +437,63 @@
         <p class="footer-note"><span>*</span> Field wajib diisi (Mandatory)</p>
     </div>
 
-    <!-- MODAL POPUP KAMERA LIVE -->
-    <div class="camera-modal" id="cameraModal">
-        <div class="camera-viewport" id="camViewport">
-            <video id="webcam" autoplay playsinline muted></video>
-            <img src="frame.png" alt="Frame Overlay" class="camera-overlay" id="frameOverlay">
+    <!-- MODAL MAIN CONTAINER -->
+    <div class="modal-overlay" id="modalOverlay">
+        
+        <!-- STEP 1: AMBIL FOTO KAMERA -->
+        <div class="modal-step" id="stepCamera">
+            <div class="viewport-box">
+                <video id="webcam" autoplay playsinline muted></video>
+            </div>
+            <div class="modal-controls">
+                <button type="button" class="btn-modal btn-grey" id="closeCamBtn">Batal</button>
+                <button type="button" class="btn-modal btn-red" id="captureBtn">📸 Ambil Foto</button>
+            </div>
         </div>
-        <div class="camera-controls">
-            <button type="button" class="btn-close-cam" id="closeCamBtn">Batal</button>
-            <button type="button" class="btn-capture" id="captureBtn">📸 Ambil Foto</button>
+
+        <!-- STEP 2: ADJUSTMENT / FIT WAJAH KE FRAME -->
+        <div class="modal-step" id="stepEditor">
+            <div class="editor-instruction">🖐️ Geser & Zoom foto agar pas di frame</div>
+            <div class="viewport-box">
+                <div class="cropper-wrapper">
+                    <img id="cropImage" src="" alt="Source Foto">
+                    <img src="./frame.png" class="editor-frame-overlay" alt="Frame Overlay">
+                </div>
+            </div>
+            <div class="modal-controls">
+                <button type="button" class="btn-modal btn-grey" id="retakeBtn">🔄 Foto Ulang</button>
+                <button type="button" class="btn-modal btn-green" id="applyCropBtn">✅ Gunakan Foto Ini</button>
+            </div>
         </div>
+
     </div>
+
+    <!-- Cropper.js JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyEPkoEaYehB9Yuy34a0DDslSC3ORxibfkRasGVgAuAI0GCXFbpPtuWT64hc4_2zuMBhA/exec";
-        const FRAME_IMAGE_URL = "frame.png";
+        const FRAME_IMAGE_URL = "./frame.png";
 
         const form = document.getElementById('registrationForm');
         const submitBtn = document.getElementById('submitBtn');
         const openCamBtn = document.getElementById('openCamBtn');
         const closeCamBtn = document.getElementById('closeCamBtn');
         const captureBtn = document.getElementById('captureBtn');
-        const cameraModal = document.getElementById('cameraModal');
+        const retakeBtn = document.getElementById('retakeBtn');
+        const applyCropBtn = document.getElementById('applyCropBtn');
+        
+        const modalOverlay = document.getElementById('modalOverlay');
+        const stepCamera = document.getElementById('stepCamera');
+        const stepEditor = document.getElementById('stepEditor');
+        
         const webcam = document.getElementById('webcam');
+        const cropImage = document.getElementById('cropImage');
         const facePreview = document.getElementById('facePreview');
         const previewContainer = document.getElementById('previewContainer');
 
         let videoStream = null;
+        let cropper = null;
         let finalCapturedBase64 = null;
 
         // --- BACKSOUND AUDIO ---
@@ -453,10 +525,9 @@
             }
         });
 
-        // --- FUNGSI BUKA KAMERA ---
+        // --- STEP 1: BUKA KAMERA ---
         openCamBtn.addEventListener('click', async () => {
             try {
-                // Konfigurasi ideal untuk kamera HP
                 const constraints = {
                     video: {
                         facingMode: "user",
@@ -468,91 +539,135 @@
 
                 videoStream = await navigator.mediaDevices.getUserMedia(constraints);
                 webcam.srcObject = videoStream;
-                cameraModal.style.display = 'flex';
+                
+                modalOverlay.style.display = 'flex';
+                stepCamera.classList.add('active');
+                stepEditor.classList.remove('active');
             } catch (err) {
                 console.error("Gagal membuka kamera:", err);
-                alert("Gagal membuka kamera. Pastikan Anda membuka website ini melalui koneksi HTTPS atau memberikan izin kamera pada browser HP Anda.");
+                alert("Gagal membuka kamera. Pastikan Anda menjalankan website via Live Server / HTTPS dan memberikan izin akses kamera.");
             }
         });
 
-        // --- TUTUP KAMERA ---
         function stopCamera() {
             if (videoStream) {
                 videoStream.getTracks().forEach(track => track.stop());
                 videoStream = null;
             }
-            cameraModal.style.display = 'none';
         }
 
-        closeCamBtn.addEventListener('click', stopCamera);
+        closeCamBtn.addEventListener('click', () => {
+            stopCamera();
+            modalOverlay.style.display = 'none';
+        });
 
+        // --- STEP 2: AMBIL FOTO RAW & MASUK KE EDITOR CROPPER ---
+        captureBtn.addEventListener('click', () => {
+            const rawCanvas = document.createElement('canvas');
+            const videoW = webcam.videoWidth || 720;
+            const videoH = webcam.videoHeight || 1280;
+            
+            rawCanvas.width = videoW;
+            rawCanvas.height = videoH;
+            const ctx = rawCanvas.getContext('2d');
+
+            // Mirror Kamera Depan
+            ctx.translate(videoW, 0);
+            ctx.scale(-1, 1);
+            ctx.drawImage(webcam, 0, 0, videoW, videoH);
+
+            // Simpan foto mentah ke elemen img Editor
+            cropImage.src = rawCanvas.toDataURL('image/jpeg', 0.95);
+
+            stopCamera();
+
+            // Pindah Tampilan ke Step Editor
+            stepCamera.classList.remove('active');
+            stepEditor.classList.add('active');
+
+            // Inisialisasi Cropper.js
+            if (cropper) {
+                cropper.destroy();
+            }
+
+            cropper = new Cropper(cropImage, {
+                aspectRatio: 360 / 450,
+                viewMode: 0,
+                dragMode: 'move',
+                autoCropArea: 1,
+                restore: false,
+                guides: false,
+                center: false,
+                highlight: false,
+                cropBoxMovable: false,
+                cropBoxResizable: false,
+                toggleDragModeOnDblclick: false,
+            });
+        });
+
+        // FOTO ULANG
+        retakeBtn.addEventListener('click', () => {
+            if (cropper) cropper.destroy();
+            openCamBtn.click();
+        });
+
+        // FUNGSI MEMUAT GAMBAR LOKAL
         function loadImage(src) {
             return new Promise((resolve, reject) => {
                 const img = new Image();
-                img.crossOrigin = "anonymous";
-                img.src = src;
                 img.onload = () => resolve(img);
-                img.onerror = (err) => reject(err);
+                img.onerror = (err) => {
+                    console.error("Gagal memuat file:", src, err);
+                    reject(err);
+                };
+                img.src = src;
             });
         }
 
-        // --- AMBIL FOTO & GABUNGKAN DENGAN FRAME VIA CANVAS ---
-        captureBtn.addEventListener('click', async () => {
+        // --- STEP 3: POTONG (CROP) & GABUNGKAN DENGAN FRAME ---
+        applyCropBtn.addEventListener('click', async () => {
+            if (!cropper) return;
+
             try {
                 const frameImg = await loadImage(FRAME_IMAGE_URL);
-                
-                // Menggunakan resolusi asli dari file frame.png agar presisi
-                const canvasWidth = frameImg.naturalWidth || 1080;
-                const canvasHeight = frameImg.naturalHeight || 1350;
+                const canvasW = frameImg.naturalWidth || 1080;
+                const canvasH = frameImg.naturalHeight || 1350;
 
-                const canvas = document.createElement('canvas');
-                canvas.width = canvasWidth;
-                canvas.height = canvasHeight;
-                const ctx = canvas.getContext('2d');
+                // Dapatkan foto hasil crop dari Cropper.js
+                const croppedCanvas = cropper.getCroppedCanvas({
+                    width: canvasW,
+                    height: canvasH,
+                    imageSmoothingEnabled: true,
+                    imageSmoothingQuality: 'high',
+                });
 
-                // 1. Gambar kamera (dengan efek mirror)
-                ctx.save();
-                ctx.translate(canvasWidth, 0);
-                ctx.scale(-1, 1);
+                // Canvas Akhir (Foto + Frame PNG)
+                const finalCanvas = document.createElement('canvas');
+                finalCanvas.width = canvasW;
+                finalCanvas.height = canvasH;
+                const ctx = finalCanvas.getContext('2d');
 
-                const videoW = webcam.videoWidth || canvasWidth;
-                const videoH = webcam.videoHeight || canvasHeight;
+                // 1. Gambar Hasil Foto yang Sudah Di-adjust ke Layer Bawah
+                ctx.drawImage(croppedCanvas, 0, 0, canvasW, canvasH);
 
-                const videoRatio = videoW / videoH;
-                const canvasRatio = canvasWidth / canvasHeight;
+                // 2. Timpa dengan Frame PNG di Layer Atas
+                ctx.drawImage(frameImg, 0, 0, canvasW, canvasH);
 
-                let drawW, drawH, drawX, drawY;
+                // 3. Simpan Hasil ke Base64
+                finalCapturedBase64 = finalCanvas.toDataURL('image/jpeg', 0.88);
 
-                if (videoRatio > canvasRatio) {
-                    drawH = canvasHeight;
-                    drawW = canvasHeight * videoRatio;
-                    drawX = (canvasWidth - drawW) / 2;
-                    drawY = 0;
-                } else {
-                    drawW = canvasWidth;
-                    drawH = canvasWidth / videoRatio;
-                    drawX = 0;
-                    drawY = (canvasHeight - drawH) / 2;
-                }
-
-                ctx.drawImage(webcam, drawX, drawY, drawW, drawH);
-                ctx.restore();
-
-                // 2. Tempelkan Frame PNG tepat di atasnya
-                ctx.drawImage(frameImg, 0, 0, canvasWidth, canvasHeight);
-
-                // 3. Konversi ke Base64
-                finalCapturedBase64 = canvas.toDataURL('image/jpeg', 0.85);
-
-                // 4. Tampilkan Preview Hasil Foto
+                // 4. Tampilkan Preview Hasil di Form
                 facePreview.src = finalCapturedBase64;
                 previewContainer.style.display = 'block';
 
-                stopCamera();
+                // Bersihkan
+                cropper.destroy();
+                cropper = null;
+                modalOverlay.style.display = 'none';
 
             } catch (err) {
-                console.error("Gagal memproses foto:", err);
-                alert("Gagal memproses foto. Pastikan file 'frame.png' tersedia di direktori web.");
+                console.error("Gagal menggabungkan foto:", err);
+                alert("Gagal memuat file 'frame.png'. Pastikan file berada di folder yang sama dengan nama 'frame.png' (huruf kecil) dan dijalankan melalui web server (misal: Live Server / HTTPS).");
             }
         });
 
@@ -561,7 +676,7 @@
             e.preventDefault();
 
             if (!finalCapturedBase64) {
-                alert("Silakan ambil foto selfie terlebih dahulu dengan menekan tombol 'Ambil Foto Selfie'.");
+                alert("Silakan ambil foto selfie terlebih dahulu.");
                 return;
             }
 
@@ -596,7 +711,7 @@
 
             } catch (error) {
                 console.error('Error:', error);
-                alert("Terjadi kesalahan. Silakan coba lagi.");
+                alert("Terjadi kesalahan saat pengiriman data. Silakan coba lagi.");
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.innerText = "DAFTAR SEKARANG";
