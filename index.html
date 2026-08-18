@@ -5,9 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registrasi - SAMAFITRO X BRADY IPS PARTNER EXCELLENCE SUMMIT 2026</title>
 
-    <!-- Load Library Deteksi Wajah (Face API) -->
-    <script defer src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.js"></script>
-
     <style>
         * {
             box-sizing: border-box;
@@ -36,7 +33,7 @@
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
         }
 
-        /* --- KONTROL MUSIK MELAYANG --- */
+        /* --- MUSIK CONTROL MELAYANG --- */
         .music-control {
             position: fixed;
             bottom: 20px;
@@ -50,7 +47,7 @@
             font-weight: bold;
             cursor: pointer;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            z-index: 9999;
+            z-index: 999;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -61,7 +58,7 @@
             transform: scale(1.05);
         }
 
-        /* --- STYLES LOGO --- */
+        /* --- LOGO WRAPPER --- */
         .logo-wrapper {
             display: flex;
             flex-direction: column;
@@ -149,8 +146,7 @@
         input[type="text"],
         input[type="tel"],
         input[type="email"],
-        select,
-        input[type="file"] {
+        select {
             width: 100%;
             padding: 12px;
             border: 1px solid #ccc;
@@ -162,16 +158,31 @@
         input[type="text"]:focus,
         input[type="tel"]:focus,
         input[type="email"]:focus,
-        select:focus,
-        input[type="file"]:focus {
+        select:focus {
             outline: none;
             border-color: #d9232d;
         }
 
-        .file-hint {
-            font-size: 12px;
-            color: #666;
-            margin-top: 4px;
+        /* --- TOMBOL KAMERA KAMERA LIVE --- */
+        .btn-open-camera {
+            width: 100%;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 12px;
+            font-size: 15px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: background 0.3s;
+        }
+
+        .btn-open-camera:hover {
+            background-color: #218838;
         }
 
         .btn-submit {
@@ -185,6 +196,7 @@
             border-radius: 6px;
             cursor: pointer;
             transition: background-color 0.3s;
+            margin-top: 10px;
         }
 
         .btn-submit:hover {
@@ -203,14 +215,7 @@
             margin-top: 15px;
         }
 
-        .ai-status {
-            font-size: 12px;
-            color: #d9232d;
-            margin-top: 6px;
-            font-weight: 600;
-        }
-
-        /* --- PREVIEW WAJAH DENGAN FRAME VERTIKAL --- */
+        /* --- PREVIEW HASIL FOTO --- */
         .preview-container {
             margin-top: 15px;
             display: none;
@@ -233,11 +238,86 @@
             height: 100%;
             object-fit: contain;
         }
+
+        /* --- MODAL POPUP KAMERA LIVE DENGAN OVERLAY FRAME --- */
+        .camera-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.85);
+            z-index: 10000;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+        }
+
+        .camera-viewport {
+            position: relative;
+            width: 100%;
+            max-width: 360px;
+            height: 450px; /* Rasio 4:5 */
+            border-radius: 12px;
+            overflow: hidden;
+            background-color: #000;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+
+        /* Video Stream dari Kamera */
+        .camera-viewport video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1); /* Efek Mirror untuk Kamera Depan */
+        }
+
+        /* Overlay Frame PNG Transparan di Atas Kamera */
+        .camera-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Agar klik tetap tembus jika ada interaksi */
+            object-fit: fill;
+        }
+
+        /* Control Buttons Modal Kamera */
+        .camera-controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn-capture {
+            background-color: #d9232d;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 15px;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .btn-close-cam {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 15px;
+            border-radius: 50px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
 
-    <!-- AUDIO BACKSOUND -->
+    <!-- BACKSOUND MUSIC -->
     <audio id="bgMusic" loop preload="auto">
         <source src="backsound.mp3" type="audio/mpeg">
     </audio>
@@ -321,39 +401,56 @@
                 </select>
             </div>
 
-            <!-- Upload Foto Selfie -->
+            <!-- Tombol Buka Kamera Live dengan Overlay Frame -->
             <div class="form-group">
-                <label for="foto_selfie">Upload Foto Selfie <span>*</span></label>
-                <input type="file" id="foto_selfie" accept="image/*" capture="user" required>
-                <div class="file-hint">Format: JPG, PNG. Posisikan wajah Anda tegak lurus.</div>
-                <div class="ai-status" id="aiStatus">Memuat sistem verifikasi wajah...</div>
+                <label>Foto Selfie Ber-Frame <span>*</span></label>
+                <button type="button" id="openCamBtn" class="btn-open-camera">📷 Ambil Foto Selfie (Live Frame)</button>
                 
-                <!-- Preview Foto + Frame -->
+                <!-- Preview Foto Hasil Capture -->
                 <div class="preview-container" id="previewContainer">
-                    <p style="font-size:12px; color:#555; margin-bottom:6px;">Preview Kartu Peserta Anda:</p>
+                    <p style="font-size:12px; color:#555; margin-top:10px; margin-bottom:6px;">Preview Kartu Peserta Anda:</p>
                     <div class="preview-box">
                         <img id="facePreview" alt="Hasil Foto Ber-Frame">
                     </div>
                 </div>
             </div>
 
-            <button type="submit" id="submitBtn" class="btn-submit" disabled>MEMUAT SISTEM...</button>
+            <button type="submit" id="submitBtn" class="btn-submit">DAFTAR SEKARANG</button>
 
         </form>
 
         <p class="footer-note"><span>*</span> Field wajib diisi (Mandatory)</p>
     </div>
 
+    <!-- MODAL POPUP KAMERA LIVE -->
+    <div class="camera-modal" id="cameraModal">
+        <div class="camera-viewport">
+            <video id="webcam" autoplay playsinline muted></video>
+            <!-- Frame ditaruh pas di atas video live kamera -->
+            <img src="frame.png" alt="Frame Overlay" class="camera-overlay" id="frameOverlay">
+        </div>
+        <div class="camera-controls">
+            <button type="button" class="btn-close-cam" id="closeCamBtn">Batal</button>
+            <button type="button" class="btn-capture" id="captureBtn">📸 Ambil Foto</button>
+        </div>
+    </div>
+
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyEPkoEaYehB9Yuy34a0DDslSC3ORxibfkRasGVgAuAI0GCXFbpPtuWT64hc4_2zuMBhA/exec";
-        const FRAME_IMAGE_URL = "frame.png"; // File PNG frame Anda
+        const FRAME_IMAGE_URL = "frame.png";
 
         const form = document.getElementById('registrationForm');
         const submitBtn = document.getElementById('submitBtn');
-        const aiStatus = document.getElementById('aiStatus');
-        const previewContainer = document.getElementById('previewContainer');
+        const openCamBtn = document.getElementById('openCamBtn');
+        const closeCamBtn = document.getElementById('closeCamBtn');
+        const captureBtn = document.getElementById('captureBtn');
+        const cameraModal = document.getElementById('cameraModal');
+        const webcam = document.getElementById('webcam');
         const facePreview = document.getElementById('facePreview');
-        let isModelLoaded = false;
+        const previewContainer = document.getElementById('previewContainer');
+
+        let videoStream = null;
+        let finalCapturedBase64 = null;
 
         // --- MUSIK ---
         const bgMusic = document.getElementById('bgMusic');
@@ -384,25 +481,32 @@
             }
         });
 
-        // --- MEMUAT AI FACE API ---
-        async function loadFaceModel() {
+        // --- BUKA MODAL KAMERA ---
+        openCamBtn.addEventListener('click', async () => {
             try {
-                const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model/';
-                await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
-                isModelLoaded = true;
-                aiStatus.innerText = "Sistem deteksi wajah aktif.";
-                aiStatus.style.color = "green";
-                submitBtn.disabled = false;
-                submitBtn.innerText = "DAFTAR SEKARANG";
+                // Minta akses kamera depan (user facing camera)
+                videoStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: "user", width: { ideal: 1080 }, height: { ideal: 1350 } },
+                    audio: false
+                });
+                webcam.srcObject = videoStream;
+                cameraModal.style.display = 'flex';
             } catch (err) {
-                console.error("Gagal memuat model:", err);
-                aiStatus.innerText = "Sistem siap.";
-                aiStatus.style.color = "#888";
-                submitBtn.disabled = false;
-                submitBtn.innerText = "DAFTAR SEKARANG";
+                console.error("Gagal membuka kamera:", err);
+                alert("Tidak dapat mengakses kamera. Pastikan Anda telah memberikan izin akses kamera di browser Anda.");
             }
+        });
+
+        // --- TUTUP KAMERA ---
+        function stopCamera() {
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+                videoStream = null;
+            }
+            cameraModal.style.display = 'none';
         }
-        window.addEventListener('DOMContentLoaded', loadFaceModel);
+
+        closeCamBtn.addEventListener('click', stopCamera);
 
         function loadImage(src) {
             return new Promise((resolve, reject) => {
@@ -414,123 +518,75 @@
             });
         }
 
-        // --- MASUKKAN WAJAH KE DALAM LUBANG FRAME SERAGAM SEKOLAH ---
-        async function detectCropAndApplyFrame(file) {
-            if (!isModelLoaded) return null;
-
-            const userImg = await loadImage(URL.createObjectURL(file));
-            const detections = await faceapi.detectAllFaces(userImg, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.6 }));
-
-            if (detections.length === 0) {
-                URL.revokeObjectURL(userImg.src);
-                return null; // Wajah tidak ditemukan
-            }
-
-            // Canvas resolusi tinggi sesuai rasio Frame (1080 x 1350)
+        // --- PROSES JEPRET FOTO + GABUNG DENGAN FRAME ---
+        captureBtn.addEventListener('click', async () => {
+            // Resolusi tinggi Canvas 1080 x 1350 (rasio 4:5)
             const canvasWidth = 1080;
             const canvasHeight = 1350;
+
             const canvas = document.createElement('canvas');
             canvas.width = canvasWidth;
             canvas.height = canvasHeight;
             const ctx = canvas.getContext('2d');
 
-            // Ambil deteksi wajah dari user
-            const box = detections[0].box;
+            // 1. Dapatkan video frame & balik secara horizontal (karena mirror)
+            ctx.save();
+            ctx.translate(canvasWidth, 0);
+            ctx.scale(-1, 1);
 
-            // Potong bagian murni wajah user (dengan sedikit margin)
-            const paddingX = box.width * 0.25;
-            const paddingY = box.height * 0.25;
+            // Hitung penyesuaian cropping video agar tepat berada di tengah Canvas
+            const videoRatio = webcam.videoWidth / webcam.videoHeight;
+            const canvasRatio = canvasWidth / canvasHeight;
 
-            let cropX = Math.max(0, box.x - paddingX);
-            let cropY = Math.max(0, box.y - paddingY);
-            let cropW = Math.min(userImg.width - cropX, box.width + (paddingX * 2));
-            let cropH = Math.min(userImg.height - cropY, box.height + (paddingY * 2));
+            let drawW, drawH, drawX, drawY;
 
-            /* 
-              TETAPKAN KOORDINAT LUBANG WAJAH PADA FRAME (DALAM PERSENTASE HASIL DETEKSI):
-              Sesuai desain twibbon seragam sekolah:
-              - Pusat Lubang X: ~49.3% (Tengah horizontal)
-              - Pusat Lubang Y: ~48.2% (Tinggi posisi wajah)
-              - Lebar Target Wajah: ~225px
-              - Tinggi Target Wajah: ~280px
-            */
-            const targetW = 230;
-            const targetH = 285;
-            const targetX = (canvasWidth * 0.493) - (targetW / 2);
-            const targetY = (canvasHeight * 0.482) - (targetH / 2);
+            if (videoRatio > canvasRatio) {
+                drawH = canvasHeight;
+                drawW = canvasHeight * videoRatio;
+                drawX = (canvasWidth - drawW) / 2;
+                drawY = 0;
+            } else {
+                drawW = canvasWidth;
+                drawH = canvasWidth / videoRatio;
+                drawX = 0;
+                drawY = (canvasHeight - drawH) / 2;
+            }
 
-            // 1. Gambar Wajah User Tepat di Koordinat Lubang Wajah Frame
-            ctx.drawImage(
-                userImg,
-                cropX, cropY, cropW, cropH,
-                targetX, targetY, targetW, targetH
-            );
+            ctx.drawImage(webcam, drawX, drawY, drawW, drawH);
+            ctx.restore(); // Kembalikan efek mirror untuk lapisan frame berikutnya
 
-            // 2. Tempelkan Frame PNG di Lapisan Paling Atas
+            // 2. Tempelkan Frame PNG di atas foto peserta
             try {
                 const frameImg = await loadImage(FRAME_IMAGE_URL);
                 ctx.drawImage(frameImg, 0, 0, canvasWidth, canvasHeight);
             } catch (err) {
-                console.warn("Frame PNG gagal dimuat.", err);
+                console.warn("Gambar frame gagal dimuat ke canvas.", err);
             }
 
-            URL.revokeObjectURL(userImg.src);
+            // 3. Simpan Hasilnya ke Base64
+            finalCapturedBase64 = canvas.toDataURL('image/jpeg', 0.85);
 
-            // Return foto komplit ber-frame
-            return canvas.toDataURL('image/jpeg', 0.85);
-        }
+            // 4. Tampilkan Preview Foto
+            facePreview.src = finalCapturedBase64;
+            previewContainer.style.display = 'block';
 
-        // Event listener saat peserta memilih foto
-        document.getElementById('foto_selfie').addEventListener('change', async function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            aiStatus.innerText = "Mendeteksi wajah & memasangkan ke seragam...";
-            aiStatus.style.color = "#d9232d";
-
-            const resultBase64 = await detectCropAndApplyFrame(file);
-
-            if (!resultBase64) {
-                alert("Please Take Your Best Selfie (Wajah tidak terdeteksi dengan jelas).");
-                this.value = ""; 
-                previewContainer.style.display = "none";
-                aiStatus.innerText = "Wajah tidak terdeteksi. Silakan ambil ulang foto.";
-                aiStatus.style.color = "red";
-            } else {
-                facePreview.src = resultBase64;
-                previewContainer.style.display = "block";
-                aiStatus.innerText = "Wajah terdeteksi & terpasang sempurna di frame!";
-                aiStatus.style.color = "green";
-            }
+            // Tutup Kamera Live
+            stopCamera();
         });
 
-        // --- PROSES SUBMIT ---
+        // --- SUBMIT REGISTRASI ---
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
 
-            const fileInput = document.getElementById('foto_selfie');
-            const file = fileInput.files[0];
-
-            if (!file) {
-                alert("Silakan unggah foto selfie terlebih dahulu.");
+            if (!finalCapturedBase64) {
+                alert("Silakan ambil foto selfie terlebih dahulu dengan menekan tombol 'Ambil Foto Selfie'.");
                 return;
             }
 
             submitBtn.disabled = true;
-            submitBtn.innerText = "Memproses Foto...";
+            submitBtn.innerText = "Mengirim Data Registrasi...";
 
             try {
-                let fotoBase64 = await detectCropAndApplyFrame(file);
-
-                if (!fotoBase64) {
-                    alert("Please Take Your Best Selfie (Wajah tidak terdeteksi).");
-                    submitBtn.disabled = false;
-                    submitBtn.innerText = "DAFTAR SEKARANG";
-                    return;
-                }
-
-                submitBtn.innerText = "Mengirim Data Registrasi...";
-
                 const payload = {
                     nama: document.getElementById('nama').value,
                     no_hp: document.getElementById('no_hp').value,
@@ -539,7 +595,7 @@
                     jabatan: document.getElementById('jabatan').value,
                     size_kemeja: document.getElementById('size_kemeja').value,
                     size_celana: document.getElementById('size_celana').value,
-                    fotoBase64: fotoBase64
+                    fotoBase64: finalCapturedBase64
                 };
 
                 await fetch(SCRIPT_URL, {
@@ -554,6 +610,7 @@
                 alert("Registrasi Berhasil! Kartu foto peserta Anda telah tersimpan.");
                 form.reset();
                 previewContainer.style.display = "none";
+                finalCapturedBase64 = null;
 
             } catch (error) {
                 console.error('Error:', error);
