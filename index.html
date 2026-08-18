@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrasi - SAMAFITRO X BRADY IPS PARTNER EXCELLENCE SUMMIT 2026</title>
+
+    <!-- Load Library Deteksi Wajah (Face API) -->
+    <script defer src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f4f7f6;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+        }
+
+        .container {
+            background-color: #ffffff;
+            width: 100%;
+            max-width: 600px;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        /* --- KONTROL MUSIK MELAYANG --- */
+        .music-control {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #d9232d;
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            padding: 10px 18px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: transform 0.2s;
+        }
+
+        .music-control:hover {
+            transform: scale(1.05);
+        }
+
+        /* --- STYLES LOGO --- */
+        .logo-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 25px;
+            gap: 20px;
+        }
+
+        .logo-row-top {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 25px;
+            width: 100%;
+        }
+
+        .logo-row-top img {
+            max-height: 50px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .logo-row-top img.logo-honeywell {
+            max-height: 95px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .logo-divider {
+            height: 60px;
+            width: 1.5px;
+            background-color: #ddd;
+        }
+
+        .logo-row-bottom {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+
+        .logo-row-bottom img.logo-aidc {
+            max-height: 110px;
+            width: auto;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.05));
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #eaeaea;
+            padding-bottom: 15px;
+        }
+
+        .header h1 {
+            font-size: 18px;
+            color: #d9232d;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .header h2 {
+            font-size: 20px;
+            color: #1a1a1a;
+            margin-top: 5px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #444;
+        }
+
+        label span {
+            color: red;
+        }
+
+        input[type="text"],
+        input[type="tel"],
+        input[type="email"],
+        select,
+        input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus,
+        input[type="tel"]:focus,
+        input[type="email"]:focus,
+        select:focus,
+        input[type="file"]:focus {
+            outline: none;
+            border-color: #d9232d;
+        }
+
+        .file-hint {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .btn-submit {
+            width: 100%;
+            background-color: #d9232d;
+            color: white;
+            border: none;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .btn-submit:hover {
+            background-color: #b01c24;
+        }
+
+        .btn-submit:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .footer-note {
+            text-align: center;
+            font-size: 12px;
+            color: #777;
+            margin-top: 15px;
+        }
+
+        .ai-status {
+            font-size: 12px;
+            color: #d9232d;
+            margin-top: 6px;
+            font-weight: 600;
+        }
+
+        /* --- PREVIEW WAJAH DENGAN FRAME VERTIKAL --- */
+        .preview-container {
+            margin-top: 15px;
+            display: none;
+            text-align: center;
+        }
+
+        .preview-box {
+            position: relative;
+            display: inline-block;
+            width: 220px;
+            height: 275px; /* Rasio 4:5 sesuai frame */
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            border: 2px solid #ddd;
+        }
+
+        .preview-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- AUDIO BACKSOUND -->
+    <audio id="bgMusic" loop preload="auto">
+        <source src="backsound.mp3" type="audio/mpeg">
+    </audio>
+
+    <button type="button" id="musicBtn" class="music-control">🎵 Play Music</button>
+
+    <div class="container">
+        
+        <div class="logo-wrapper">
+            <div class="logo-row-top">
+                <img src="samafitro.png" alt="Logo Samafitro">
+                <div class="logo-divider"></div>
+                <img src="honeywell.png" alt="Logo Honeywell" class="logo-honeywell">
+            </div>
+            <div class="logo-row-bottom">
+                <img src="aidc.png" alt="Logo AIDC" class="logo-aidc">
+            </div>
+        </div>
+
+        <div class="header">
+            <h1>SAMAFITRO X BRADY IPS</h1>
+            <h2>PARTNER EXCELLENCE SUMMIT 2026</h2>
+        </div>
+
+        <form id="registrationForm">
+            
+            <div class="form-group">
+                <label for="nama">Nama Lengkap <span>*</span></label>
+                <input type="text" id="nama" name="nama" placeholder="Masukkan nama lengkap Anda" required>
+            </div>
+
+            <div class="form-group">
+                <label for="no_hp">Nomor Handphone / WhatsApp <span>*</span></label>
+                <input type="tel" id="no_hp" name="no_hp" placeholder="Contoh: 081234567890" pattern="[0-9]{9,15}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Alamat Email <span>*</span></label>
+                <input type="email" id="email" name="email" placeholder="contoh@perusahaan.com" required>
+            </div>
+
+            <div class="form-group">
+                <label for="perusahaan">Nama Perusahaan <span>*</span></label>
+                <input type="text" id="perusahaan" name="perusahaan" placeholder="Masukkan nama perusahaan" required>
+            </div>
+
+            <div class="form-group">
+                <label for="jabatan">Jabatan <span>*</span></label>
+                <input type="text" id="jabatan" name="jabatan" placeholder="Masukkan jabatan Anda" required>
+            </div>
+
+            <div class="form-group">
+                <label for="size_kemeja">Size Kemeja <span>*</span></label>
+                <select id="size_kemeja" name="size_kemeja" required>
+                    <option value="" disabled selected>-- Pilih Ukuran Kemeja --</option>
+                    <option value="S">S</option>
+                    <option value="M">M</option>
+                    <option value="L">L</option>
+                    <option value="XL">XL</option>
+                    <option value="XXL">XXL</option>
+                    <option value="XXXL">XXXL</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="size_celana">Size Celana <span>*</span></label>
+                <select id="size_celana" name="size_celana" required>
+                    <option value="" disabled selected>-- Pilih Ukuran Celana --</option>
+                    <option value="28">28</option>
+                    <option value="29">29</option>
+                    <option value="30">30</option>
+                    <option value="31">31</option>
+                    <option value="32">32</option>
+                    <option value="33">33</option>
+                    <option value="34">34</option>
+                    <option value="35">35</option>
+                    <option value="36">36</option>
+                    <option value="37">37</option>
+                    <option value="38">38</option>
+                    <option value="40">40</option>
+                </select>
+            </div>
+
+            <!-- Upload Foto Selfie -->
+            <div class="form-group">
+                <label for="foto_selfie">Upload Foto Selfie <span>*</span></label>
+                <input type="file" id="foto_selfie" accept="image/*" capture="user" required>
+                <div class="file-hint">Format: JPG, PNG. Posisikan wajah Anda tegak lurus.</div>
+                <div class="ai-status" id="aiStatus">Memuat sistem verifikasi wajah...</div>
+                
+                <!-- Preview Foto + Frame -->
+                <div class="preview-container" id="previewContainer">
+                    <p style="font-size:12px; color:#555; margin-bottom:6px;">Preview Kartu Peserta Anda:</p>
+                    <div class="preview-box">
+                        <img id="facePreview" alt="Hasil Foto Ber-Frame">
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" id="submitBtn" class="btn-submit" disabled>MEMUAT SISTEM...</button>
+
+        </form>
+
+        <p class="footer-note"><span>*</span> Field wajib diisi (Mandatory)</p>
+    </div>
+
+    <script>
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyEPkoEaYehB9Yuy34a0DDslSC3ORxibfkRasGVgAuAI0GCXFbpPtuWT64hc4_2zuMBhA/exec";
+        const FRAME_IMAGE_URL = "frame.png"; // File PNG frame Anda
+
+        const form = document.getElementById('registrationForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const aiStatus = document.getElementById('aiStatus');
+        const previewContainer = document.getElementById('previewContainer');
+        const facePreview = document.getElementById('facePreview');
+        let isModelLoaded = false;
+
+        // --- MUSIK ---
+        const bgMusic = document.getElementById('bgMusic');
+        const musicBtn = document.getElementById('musicBtn');
+        let isPlaying = false;
+
+        function playAudio() {
+            if (!isPlaying) {
+                bgMusic.play().then(() => {
+                    isPlaying = true;
+                    musicBtn.innerText = "🔊 Mute Music";
+                }).catch(() => {});
+            }
+        }
+        document.addEventListener('click', playAudio, { once: true });
+        document.addEventListener('touchstart', playAudio, { once: true });
+
+        musicBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (isPlaying) {
+                bgMusic.pause();
+                isPlaying = false;
+                musicBtn.innerText = "🎵 Play Music";
+            } else {
+                bgMusic.play();
+                isPlaying = true;
+                musicBtn.innerText = "🔊 Mute Music";
+            }
+        });
+
+        // --- MEMUAT AI FACE API ---
+        async function loadFaceModel() {
+            try {
+                const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model/';
+                await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
+                isModelLoaded = true;
+                aiStatus.innerText = "Sistem deteksi wajah aktif.";
+                aiStatus.style.color = "green";
+                submitBtn.disabled = false;
+                submitBtn.innerText = "DAFTAR SEKARANG";
+            } catch (err) {
+                console.error("Gagal memuat model:", err);
+                aiStatus.innerText = "Sistem siap.";
+                aiStatus.style.color = "#888";
+                submitBtn.disabled = false;
+                submitBtn.innerText = "DAFTAR SEKARANG";
+            }
+        }
+        window.addEventListener('DOMContentLoaded', loadFaceModel);
+
+        function loadImage(src) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.crossOrigin = "anonymous";
+                img.src = src;
+                img.onload = () => resolve(img);
+                img.onerror = (err) => reject(err);
+            });
+        }
+
+        // --- MASUKKAN WAJAH KE DALAM LUBANG FRAME SERAGAM SEKOLAH ---
+        async function detectCropAndApplyFrame(file) {
+            if (!isModelLoaded) return null;
+
+            const userImg = await loadImage(URL.createObjectURL(file));
+            const detections = await faceapi.detectAllFaces(userImg, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.6 }));
+
+            if (detections.length === 0) {
+                URL.revokeObjectURL(userImg.src);
+                return null; // Wajah tidak ditemukan
+            }
+
+            // Canvas resolusi tinggi sesuai rasio Frame (1080 x 1350)
+            const canvasWidth = 1080;
+            const canvasHeight = 1350;
+            const canvas = document.createElement('canvas');
+            canvas.width = canvasWidth;
+            canvas.height = canvasHeight;
+            const ctx = canvas.getContext('2d');
+
+            // Ambil deteksi wajah dari user
+            const box = detections[0].box;
+
+            // Potong bagian murni wajah user (dengan sedikit margin)
+            const paddingX = box.width * 0.25;
+            const paddingY = box.height * 0.25;
+
+            let cropX = Math.max(0, box.x - paddingX);
+            let cropY = Math.max(0, box.y - paddingY);
+            let cropW = Math.min(userImg.width - cropX, box.width + (paddingX * 2));
+            let cropH = Math.min(userImg.height - cropY, box.height + (paddingY * 2));
+
+            /* 
+              TETAPKAN KOORDINAT LUBANG WAJAH PADA FRAME (DALAM PERSENTASE HASIL DETEKSI):
+              Sesuai desain twibbon seragam sekolah:
+              - Pusat Lubang X: ~49.3% (Tengah horizontal)
+              - Pusat Lubang Y: ~48.2% (Tinggi posisi wajah)
+              - Lebar Target Wajah: ~225px
+              - Tinggi Target Wajah: ~280px
+            */
+            const targetW = 230;
+            const targetH = 285;
+            const targetX = (canvasWidth * 0.493) - (targetW / 2);
+            const targetY = (canvasHeight * 0.482) - (targetH / 2);
+
+            // 1. Gambar Wajah User Tepat di Koordinat Lubang Wajah Frame
+            ctx.drawImage(
+                userImg,
+                cropX, cropY, cropW, cropH,
+                targetX, targetY, targetW, targetH
+            );
+
+            // 2. Tempelkan Frame PNG di Lapisan Paling Atas
+            try {
+                const frameImg = await loadImage(FRAME_IMAGE_URL);
+                ctx.drawImage(frameImg, 0, 0, canvasWidth, canvasHeight);
+            } catch (err) {
+                console.warn("Frame PNG gagal dimuat.", err);
+            }
+
+            URL.revokeObjectURL(userImg.src);
+
+            // Return foto komplit ber-frame
+            return canvas.toDataURL('image/jpeg', 0.85);
+        }
+
+        // Event listener saat peserta memilih foto
+        document.getElementById('foto_selfie').addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            aiStatus.innerText = "Mendeteksi wajah & memasangkan ke seragam...";
+            aiStatus.style.color = "#d9232d";
+
+            const resultBase64 = await detectCropAndApplyFrame(file);
+
+            if (!resultBase64) {
+                alert("Please Take Your Best Selfie (Wajah tidak terdeteksi dengan jelas).");
+                this.value = ""; 
+                previewContainer.style.display = "none";
+                aiStatus.innerText = "Wajah tidak terdeteksi. Silakan ambil ulang foto.";
+                aiStatus.style.color = "red";
+            } else {
+                facePreview.src = resultBase64;
+                previewContainer.style.display = "block";
+                aiStatus.innerText = "Wajah terdeteksi & terpasang sempurna di frame!";
+                aiStatus.style.color = "green";
+            }
+        });
+
+        // --- PROSES SUBMIT ---
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const fileInput = document.getElementById('foto_selfie');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert("Silakan unggah foto selfie terlebih dahulu.");
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Memproses Foto...";
+
+            try {
+                let fotoBase64 = await detectCropAndApplyFrame(file);
+
+                if (!fotoBase64) {
+                    alert("Please Take Your Best Selfie (Wajah tidak terdeteksi).");
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = "DAFTAR SEKARANG";
+                    return;
+                }
+
+                submitBtn.innerText = "Mengirim Data Registrasi...";
+
+                const payload = {
+                    nama: document.getElementById('nama').value,
+                    no_hp: document.getElementById('no_hp').value,
+                    email: document.getElementById('email').value,
+                    perusahaan: document.getElementById('perusahaan').value,
+                    jabatan: document.getElementById('jabatan').value,
+                    size_kemeja: document.getElementById('size_kemeja').value,
+                    size_celana: document.getElementById('size_celana').value,
+                    fotoBase64: fotoBase64
+                };
+
+                await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'text/plain;charset=utf-8'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                alert("Registrasi Berhasil! Kartu foto peserta Anda telah tersimpan.");
+                form.reset();
+                previewContainer.style.display = "none";
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert("Terjadi kesalahan. Silakan coba lagi.");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = "DAFTAR SEKARANG";
+            }
+        });
+    </script>
+</body>
+</html>
