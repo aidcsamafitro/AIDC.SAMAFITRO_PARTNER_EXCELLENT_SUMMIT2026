@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Registrasi - SAMAFITRO X BRADY IPS PARTNER EXCELLENCE SUMMIT 2026</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f4f7f6;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 15px;
+            position: relative;
+        }
+
+        .container {
+            background-color: #ffffff;
+            width: 100%;
+            max-width: 600px;
+            padding: 25px 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        /* --- MUSIK CONTROL MELAYANG --- */
+        .music-control {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #d9232d;
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            padding: 10px 16px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* --- LOGO WRAPPER --- */
+        .logo-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 15px;
+        }
+
+        .logo-row-top {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            width: 100%;
+        }
+
+        .logo-row-top img {
+            max-height: 45px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .logo-row-top img.logo-honeywell {
+            max-height: 75px;
+        }
+
+        .logo-divider {
+            height: 45px;
+            width: 1.5px;
+            background-color: #ddd;
+        }
+
+        .logo-row-bottom img.logo-aidc {
+            max-height: 85px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eaeaea;
+            padding-bottom: 12px;
+        }
+
+        .header h1 {
+            font-size: 16px;
+            color: #d9232d;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .header h2 {
+            font-size: 18px;
+            color: #1a1a1a;
+            margin-top: 4px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 6px;
+            font-size: 14px;
+            color: #444;
+        }
+
+        label span {
+            color: red;
+        }
+
+        input[type="text"],
+        input[type="tel"],
+        input[type="email"],
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #d9232d;
+        }
+
+        .btn-open-camera {
+            width: 100%;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 12px;
+            font-size: 15px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-submit {
+            width: 100%;
+            background-color: #d9232d;
+            color: white;
+            border: none;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .btn-submit:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .footer-note {
+            text-align: center;
+            font-size: 12px;
+            color: #777;
+            margin-top: 15px;
+        }
+
+        /* --- PREVIEW HASIL FOTO --- */
+        .preview-container {
+            margin-top: 15px;
+            display: none;
+            text-align: center;
+        }
+
+        .preview-box {
+            position: relative;
+            display: inline-block;
+            max-width: 100%;
+            width: 260px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            border: 2px solid #ddd;
+        }
+
+        .preview-box img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* --- MODAL POPUP KAMERA OPTIMIZED FOR MOBILE --- */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0,0,0,0.92);
+            z-index: 10000;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+        }
+
+        .modal-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 340px;
+        }
+
+        /* CONTAINER VIEWPORT DENGAN RASIO PRESISI */
+        .viewport-box {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 9 / 16;
+            max-height: 68vh;
+            border-radius: 12px;
+            overflow: hidden;
+            background-color: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* VIDEO KAMERA DIPISAHKAN DARI EFEK CROP AGAR ANGLE WIDE TERJAGA */
+        .viewport-box video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Menutupi area frame secara penuh tanpa terdistorsi */
+            transform: scaleX(-1); /* Mirror Kamera Depan */
+            z-index: 1;
+        }
+
+        /* FRAME OVERLAY PNG */
+        .camera-frame-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: fill;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .modal-controls {
+            margin-top: 15px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-modal {
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+        }
+
+        .btn-red { background-color: #d9232d; }
+        .btn-grey { background-color: #6c757d; }
+
+        .editor-instruction {
+            color: #fff;
+            font-size: 12px;
+            margin-bottom: 10px;
+            text-align: center;
+            background: rgba(255,255,255,0.15);
+            padding: 6px 14px;
+            border-radius: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- BACKSOUND MUSIC -->
+    <audio id="bgMusic" loop preload="auto">
+        <source src="backsound.mp3" type="audio/mpeg">
+    </audio>
+
+    <button type="button" id="musicBtn" class="music-control">🎵 Play Music</button>
+
+    <div class="container">
+        
+        <div class="logo-wrapper">
+            <div class="logo-row-top">
+                <img src="samafitro.png" alt="Logo Samafitro">
+                <div class="logo-divider"></div>
+                <img src="honeywell.png" alt="Logo Honeywell" class="logo-honeywell">
+            </div>
+            <div class="logo-row-bottom">
+                <img src="aidc.png" alt="Logo AIDC" class="logo-aidc">
+            </div>
+        </div>
+
+        <div class="header">
+            <h1>SAMAFITRO X BRADY IPS</h1>
+            <h2>PARTNER EXCELLENCE SUMMIT 2026</h2>
+        </div>
+
+        <form id="registrationForm">
+            
+            <div class="form-group">
+                <label for="nama">Nama Lengkap <span>*</span></label>
+                <input type="text" id="nama" name="nama" placeholder="Masukkan nama lengkap Anda" required>
+            </div>
+
+            <div class="form-group">
+                <label for="no_hp">Nomor Handphone / WhatsApp <span>*</span></label>
+                <input type="tel" id="no_hp" name="no_hp" placeholder="Contoh: 081234567890" pattern="[0-9]{9,15}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Alamat Email <span>*</span></label>
+                <input type="email" id="email" name="email" placeholder="contoh@perusahaan.com" required>
+            </div>
+
+            <div class="form-group">
+                <label for="perusahaan">Nama Perusahaan <span>*</span></label>
+                <input type="text" id="perusahaan" name="perusahaan" placeholder="Masukkan nama perusahaan" required>
+            </div>
+
+            <div class="form-group">
+                <label for="jabatan">Jabatan <span>*</span></label>
+                <input type="text" id="jabatan" name="jabatan" placeholder="Masukkan jabatan Anda" required>
+            </div>
+
+            <div class="form-group">
+                <label for="size_kemeja">Size Kemeja <span>*</span></label>
+                <select id="size_kemeja" name="size_kemeja" required>
+                    <option value="" disabled selected>-- Pilih Ukuran Kemeja --</option>
+                    <option value="S">S</option>
+                    <option value="M">M</option>
+                    <option value="L">L</option>
+                    <option value="XL">XL</option>
+                    <option value="XXL">XXL</option>
+                    <option value="XXXL">XXXL</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="size_celana">Size Celana <span>*</span></label>
+                <select id="size_celana" name="size_celana" required>
+                    <option value="" disabled selected>-- Pilih Ukuran Celana --</option>
+                    <option value="28">28</option>
+                    <option value="29">29</option>
+                    <option value="30">30</option>
+                    <option value="31">31</option>
+                    <option value="32">32</option>
+                    <option value="33">33</option>
+                    <option value="34">34</option>
+                    <option value="35">35</option>
+                    <option value="36">36</option>
+                    <option value="37">37</option>
+                    <option value="38">38</option>
+                    <option value="40">40</option>
+                </select>
+            </div>
+
+            <!-- Tombol Buka Kamera -->
+            <div class="form-group">
+                <label>Foto Selfie Ber-Frame <span>*</span></label>
+                <button type="button" id="openCamBtn" class="btn-open-camera">📷 Ambil Foto Selfie (Live Frame)</button>
+                
+                <!-- Preview Foto Hasil Kamera + Frame -->
+                <div class="preview-container" id="previewContainer">
+                    <p style="font-size:12px; color:#555; margin-top:10px; margin-bottom:6px;">Preview Kartu Peserta Anda:</p>
+                    <div class="preview-box">
+                        <img id="facePreview" alt="Hasil Foto Ber-Frame">
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" id="submitBtn" class="btn-submit">DAFTAR SEKARANG</button>
+
+        </form>
+
+        <p class="footer-note"><span>*</span> Field wajib diisi (Mandatory)</p>
+    </div>
+
+    <!-- MODAL POPUP KAMERA -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-content">
+            <div class="editor-instruction">🎯 Posisikan wajah Anda agar pas di dalam frame</div>
+            <div class="viewport-box">
+                <video id="webcam" autoplay playsinline muted></video>
+                <img src="./frame.png" class="camera-frame-overlay" alt="Live Frame">
+            </div>
+            <div class="modal-controls">
+                <button type="button" class="btn-modal btn-grey" id="closeCamBtn">Batal</button>
+                <button type="button" class="btn-modal btn-red" id="captureBtn">📸 Ambil Foto</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyEPkoEaYehB9Yuy34a0DDslSC3ORxibfkRasGVgAuAI0GCXFbpPtuWT64hc4_2zuMBhA/exec";
+        const FRAME_IMAGE_URL = "./frame.png";
+
+        const form = document.getElementById('registrationForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const openCamBtn = document.getElementById('openCamBtn');
+        const closeCamBtn = document.getElementById('closeCamBtn');
+        const captureBtn = document.getElementById('captureBtn');
+        
+        const modalOverlay = document.getElementById('modalOverlay');
+        const webcam = document.getElementById('webcam');
+        const facePreview = document.getElementById('facePreview');
+        const previewContainer = document.getElementById('previewContainer');
+
+        let videoStream = null;
+        let finalCapturedBase64 = null;
+
+        // --- BACKSOUND AUDIO ---
+        const bgMusic = document.getElementById('bgMusic');
+        const musicBtn = document.getElementById('musicBtn');
+        let isPlaying = false;
+
+        function playAudio() {
+            if (!isPlaying) {
+                bgMusic.play().then(() => {
+                    isPlaying = true;
+                    musicBtn.innerText = "🔊 Mute Music";
+                }).catch(() => {});
+            }
+        }
+        document.addEventListener('click', playAudio, { once: true });
+        document.addEventListener('touchstart', playAudio, { once: true });
+
+        musicBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (isPlaying) {
+                bgMusic.pause();
+                isPlaying = false;
+                musicBtn.innerText = "🎵 Play Music";
+            } else {
+                bgMusic.play();
+                isPlaying = true;
+                musicBtn.innerText = "🔊 Mute Music";
+            }
+        });
+
+        // --- BUKA KAMERA OPTIMIZED UNTUK HP (MENJAUH / ANGLE WIDE) ---
+        openCamBtn.addEventListener('click', async () => {
+            try {
+                // Konfigurasi khusus HP agar mengambil rasio WIDE tanpa paksaan zoom
+                const constraints = {
+                    video: {
+                        facingMode: "user",
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 },
+                        aspectRatio: { ideal: 9/16 }
+                    },
+                    audio: false
+                };
+
+                videoStream = await navigator.mediaDevices.getUserMedia(constraints);
+                webcam.srcObject = videoStream;
+                modalOverlay.style.display = 'flex';
+            } catch (err) {
+                console.error("Gagal membuka kamera:", err);
+                alert("Gagal membuka kamera. Pastikan Anda memberikan izin akses kamera.");
+            }
+        });
+
+        function stopCamera() {
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+                videoStream = null;
+            }
+        }
+
+        closeCamBtn.addEventListener('click', () => {
+            stopCamera();
+            modalOverlay.style.display = 'none';
+        });
+
+        function loadImage(src) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => resolve(img);
+                img.onerror = (err) => reject(err);
+                img.src = src;
+            });
+        }
+
+        // --- AMBIL FOTO SECARA PRESISI SESUAI TAMPILAN HP ---
+        captureBtn.addEventListener('click', async () => {
+            try {
+                const finalCanvas = document.createElement('canvas');
+                finalCanvas.width = 1080;
+                finalCanvas.height = 1920;
+                const ctx = finalCanvas.getContext('2d');
+
+                const vW = webcam.videoWidth;
+                const vH = webcam.videoHeight;
+                
+                // Kalkulasi rasio pemotongan (center crop) sesuai apa yang terlihat di layar HP
+                const targetAspect = 1080 / 1920;
+                const videoAspect = vW / vH;
+                
+                let sx, sy, sWidth, sHeight;
+
+                if (videoAspect > targetAspect) {
+                    sHeight = vH;
+                    sWidth = vH * targetAspect;
+                    sx = (vW - sWidth) / 2;
+                    sy = 0;
+                } else {
+                    sWidth = vW;
+                    sHeight = vW / targetAspect;
+                    sx = 0;
+                    sy = (vH - sHeight) / 2;
+                }
+
+                // 1. Gambar Video Kamera Ke Canvas (Mirror + Crop Presisi)
+                ctx.save();
+                ctx.translate(1080, 0);
+                ctx.scale(-1, 1);
+                ctx.drawImage(webcam, sx, sy, sWidth, sHeight, 0, 0, 1080, 1920);
+                ctx.restore();
+
+                // 2. Timpa Frame PNG di Lapisan Atas
+                const frameImg = await loadImage(FRAME_IMAGE_URL);
+                ctx.drawImage(frameImg, 0, 0, 1080, 1920);
+
+                // 3. Simpan Ke Base64 JPEG
+                finalCapturedBase64 = finalCanvas.toDataURL('image/jpeg', 0.90);
+
+                // 4. Tampilkan Preview Hasil & Tutup Modal
+                facePreview.src = finalCapturedBase64;
+                previewContainer.style.display = 'block';
+
+                stopCamera();
+                modalOverlay.style.display = 'none';
+
+            } catch (err) {
+                console.error("Gagal mengambil foto:", err);
+                alert("Gagal memproses foto. Pastikan file 'frame.png' tersedia.");
+            }
+        });
+
+        // --- SUBMIT REGISTRASI ---
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            if (!finalCapturedBase64) {
+                alert("Silakan ambil foto selfie terlebih dahulu.");
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Mengirim Data Registrasi...";
+
+            try {
+                const payload = {
+                    nama: document.getElementById('nama').value,
+                    no_hp: document.getElementById('no_hp').value,
+                    email: document.getElementById('email').value,
+                    perusahaan: document.getElementById('perusahaan').value,
+                    jabatan: document.getElementById('jabatan').value,
+                    size_kemeja: document.getElementById('size_kemeja').value,
+                    size_celana: document.getElementById('size_celana').value,
+                    fotoBase64: finalCapturedBase64
+                };
+
+                await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'text/plain;charset=utf-8'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                alert("Registrasi Berhasil! Data dan foto Anda telah tersimpan.");
+                form.reset();
+                previewContainer.style.display = "none";
+                finalCapturedBase64 = null;
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert("Terjadi kesalahan saat pengiriman data. Silakan coba lagi.");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = "DAFTAR SEKARANG";
+            }
+        });
+    </script>
+</body>
+</html>
